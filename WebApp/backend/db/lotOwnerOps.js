@@ -155,3 +155,67 @@ exports.updateLotStatus = async (OwnerID, post) => {
     res.status(400).json({ "DB ERROR": error });
   }
 };
+
+exports.getAnalytics = async (lotID, ownerID) => {
+  try {
+    let poolS = await pool;
+    let query = await poolS
+      .request()
+      .input("LotID", sql.Int, lotID)
+      .input("OwnerID", sql.Int, ownerID)
+      .query(`
+        SELECT COUNT(*) AS carsParked,
+               AVG(ps.Rating) AS avgRating,
+               AVG(DATEDIFF(HOUR, ps.InTime, ps.OutTime)) AS avgHours,
+               SUM(ps.Charge) AS totalEarnings
+        FROM ParkingSession ps
+        JOIN Lot l ON ps.LotID = l.LotID
+        WHERE l.LotOwnerID = @OwnerID AND l.LotID = @LotID;
+
+        SELECT DATEPART(HOUR, InTime) AS hour, COUNT(*) AS count
+        FROM ParkingSession
+        WHERE LotID = @LotID
+        GROUP BY DATEPART(HOUR, InTime)
+        ORDER BY hour;
+
+        SELECT ZoneID AS zone, COUNT(*) AS count
+        FROM ParkingSession ps
+        JOIN LotZone lz ON ps.LotID = lz.LotID
+        WHERE ps.LotID = @LotID
+        GROUP BY ZoneID;
+      `);
+
+    const result = {
+      carsParked: query.recordsets[0][0].carsParked,
+      avgRating: query.recordsets[0][0].avgRating,
+      avgHours: query.recordsets[0][0].avgHours,
+      totalEarnings: query.recordsets[0][0].totalEarnings,
+      peakHours: query.recordsets[1],
+      zoneWise: query.recordsets[2]
+    };
+
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+exports.getLots = async (ownerID) => {
+  try {
+    let poolS = await pool;
+    let query = await poolS
+      .request()
+      .input("OwnerID", sql.Int, ownerID)
+      .query(`
+        SELECT LotID, LotName
+        FROM Lot
+        WHERE LotOwnerID = @OwnerID
+      `);
+
+    return query.recordset;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};

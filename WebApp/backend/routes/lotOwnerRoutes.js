@@ -14,4 +14,8 @@ router.post("/add", auth , lotOwnerController.addLot)
 router.post("/support", auth , lotOwnerController.support)
 router.patch("/status", auth , lotOwnerController.updateLotStatus)
 
+router.get("/analytics/:lotID", auth, lotOwnerController.getAnalytics);
+router.get("/lots", auth, lotOwnerController.getLots);
+
+
 module.exports = router;
