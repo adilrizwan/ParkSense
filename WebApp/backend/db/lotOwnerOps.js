@@ -170,10 +170,13 @@ exports.getAnalytics = async (lotID, ownerID) => {
                AVG(CAST(ps.Rating AS DECIMAL(10, 2))) AS avgRating,
                AVG(CAST(DATEDIFF(MINUTE, ps.InTime, ISNULL(ps.OutTime, GETDATE())) AS FLOAT) / 60) AS avgHours,
                SUM(ps.Charge) AS totalEarnings,
-               COUNT(DISTINCT ps.CarID) AS returningCustomers
+               COUNT(DISTINCT ps.CarID) AS returningCustomers,
+               l.SpaceAvailable AS spacesAvailable,
+               l.TotalCapacity AS totalCapacity
         FROM ParkingSession ps
         JOIN Lot l ON ps.LotID = l.LotID
-        WHERE l.LotOwnerID = @OwnerID AND l.LotID = @LotID;
+        WHERE l.LotOwnerID = @OwnerID AND l.LotID = @LotID
+        GROUP BY l.SpaceAvailable, l.TotalCapacity;
 
         SELECT DATEPART(HOUR, InTime) AS hour, COUNT(*) AS count
         FROM ParkingSession
@@ -192,6 +195,21 @@ exports.getAnalytics = async (lotID, ownerID) => {
         WHERE ps.LotID = @LotID
         GROUP BY CONVERT(DATE, ps.InTime)
         ORDER BY date;
+
+        SELECT l.LotID, l.LotName, SUM(ps.Charge) AS revenue
+        FROM ParkingSession ps
+        JOIN Lot l ON ps.LotID = l.LotID
+        WHERE l.LotOwnerID = @OwnerID
+        GROUP BY l.LotID, l.LotName
+        HAVING SUM(ps.Charge) > 0
+        ORDER BY l.LotID;
+
+        SELECT SUM(ps.Charge) AS currentDayRevenue
+        FROM ParkingSession ps
+        WHERE ps.LotID = @LotID 
+        AND CONVERT(DATE, ps.InTime) = CONVERT(DATE, GETDATE())
+        AND ps.OutTime IS NOT NULL
+        AND CONVERT(DATE, ps.OutTime) = CONVERT(DATE, GETDATE());
       `);
 
     const result = {
@@ -200,10 +218,15 @@ exports.getAnalytics = async (lotID, ownerID) => {
       avgRating: query.recordsets[0][0].avgRating,
       avgHours: query.recordsets[0][0].avgHours,
       totalEarnings: query.recordsets[0][0].totalEarnings,
+      totalSessions: query.recordsets[0][0].totalSessions,
+      avgSessionDuration: query.recordsets[0][0].avgSessionDuration,
       returningCustomers: query.recordsets[0][0].returningCustomers,
+      availableSpaces: `${query.recordsets[0][0].spacesAvailable} / ${query.recordsets[0][0].totalCapacity}`,
       peakHours: query.recordsets[1],
       carTypeCounts: query.recordsets[2],
-      revenueOverTime: query.recordsets[3]
+      revenueOverTime: query.recordsets[3],
+      revenueComparison: query.recordsets[4],
+      currentDayRevenue: query.recordsets[5][0]?.currentDayRevenue || 0,
     };
 
     return result;
@@ -212,6 +235,9 @@ exports.getAnalytics = async (lotID, ownerID) => {
     throw error;
   }
 };
+
+
+
 
 
 

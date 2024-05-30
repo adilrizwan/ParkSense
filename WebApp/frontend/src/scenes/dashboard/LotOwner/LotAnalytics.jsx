@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, Card, CardContent, MenuItem, Select, FormControl, InputLabel, CircularProgress, Alert, Paper } from '@mui/material';
-import { Bar, Line, Pie } from 'react-chartjs-2';
+import { Box, Typography, Card, CardContent, MenuItem, Select, FormControl, InputLabel, CircularProgress, Alert, Paper, Grid } from '@mui/material';
+import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import dayjs from 'dayjs';
-
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -26,7 +24,10 @@ export default function AnalyticsDashboard() {
         totalSessions: 0,
         avgSessionDuration: 0,
         returningCustomers: 0,
-        revenueOverTime: []
+        availableSpaces: 0,
+        revenueOverTime: [],
+        revenueComparison: [], 
+        currentDayRevenue: 0,                                                                                                  
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -78,7 +79,7 @@ export default function AnalyticsDashboard() {
     };
 
     const peakHoursData = {
-        labels: analytics.peakHours?.map(item => item.hour || 0),
+        labels: analytics.peakHours?.map(item => item.hour ? `${item.hour}:00` : '0:00'),
         datasets: [
             {
                 type: 'bar',
@@ -96,6 +97,64 @@ export default function AnalyticsDashboard() {
                 fill: false,
             },
         ],
+    };
+    
+    const options = {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Hours',
+                },
+                ticks: {
+                    callback: function(value, index, values) {
+                        // This assumes that `values` are in the format "HH:00"
+                        if (typeof value === 'string' && value.includes(':')) {
+                            return value;
+                        }
+                        // Fallback in case values are not strings with ":"
+                        return `${value}:00`;
+                    }
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Cars Parked',
+                },
+            },
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[0].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = (value * 100 / sum).toFixed(2) + "%";
+                    return percentage;
+                },
+                color: '#fff',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        let sum = 0;
+                        let dataArr = tooltipItem.dataset.data;
+                        dataArr.map(data => {
+                            sum += data;
+                        });
+                        let percentage = (tooltipItem.raw * 100 / sum).toFixed(2) + "%";
+                        return `${tooltipItem.label}: ${tooltipItem.raw} (${percentage})`;
+                    },
+                },
+            },
+        },
     };
 
     const carTypeData = {
@@ -159,14 +218,57 @@ export default function AnalyticsDashboard() {
         },
     };
 
+    const revenueComparisonData = {
+        labels: analytics.revenueComparison?.map(item => item.LotName || ''),
+        datasets: [
+            {
+                label: 'Revenue',
+                data: analytics.revenueComparison?.map(item => item.revenue || 0),
+                backgroundColor: analytics.revenueComparison?.map(item => 
+                    item.LotID === selectedLot ? 'rgba(75,192,192,1)' : 'rgba(153,102,255,1)'
+                ),
+                borderColor: 'rgba(255,255,255,0.8)',
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const revenueComparisonOptions = {
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[0].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = (value * 100 / sum).toFixed(2) + "%";
+                    return percentage;
+                },
+                color: '#fff',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
+                    },
+                },
+            },
+        }
+    };
+
     const revenueOverTimeData = {
-        labels: analytics.revenueOverTime?.map(item => dayjs(item.date).format('DD-MM-YYYY')),
+        labels: analytics.revenueOverTime?.map(item => new Date(item.date).toLocaleDateString() || ''),
         datasets: [
             {
                 label: 'Revenue',
                 data: analytics.revenueOverTime?.map(item => item.revenue || 0),
-                backgroundColor: 'rgba(255,99,132,0.2)',
-                borderColor: 'rgba(255,99,132,1)',
+                backgroundColor: 'rgba(153,102,255,1)',
+                borderColor: 'rgba(153,102,255,1)',
                 borderWidth: 1,
             },
         ],
@@ -195,7 +297,7 @@ export default function AnalyticsDashboard() {
                             {lot.LotName}
                         </MenuItem>
                     ))}
-                        </Select>
+                </Select>
             </FormControl>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -203,122 +305,141 @@ export default function AnalyticsDashboard() {
                 </Box>
             ) : (
                 <>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    All-time Cars Parked
-                                </Typography>
-                                <Typography variant="h3" align="center">
-                                    {analytics.carsParked}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    Currently Parked Cars
-                                </Typography>
-                                <Typography variant="h3" align="center">
-                                    {analytics.ongoingSessions}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    Average Rating
-                                </Typography>
-                                <Typography variant="h3" align="center">
+                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Today's Revenue
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
+                                        ${analytics.currentDayRevenue}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Ongoing Sessions
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
+                                        {analytics.ongoingSessions}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Average Rating
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
                                     {analytics.avgRating ? analytics.avgRating.toFixed(2) : 'N/A'}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Average Session Duration
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
+                                        {analytics.avgHours ? analytics.avgHours.toFixed(2) : 'N/A'}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Available Spaces
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
+                                        {analytics.availableSpaces}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ minWidth: 275 }}>
+                                <CardContent>
+                                    <Typography variant="h5" component="div" align="center">
+                                        Lifetime Revenue
+                                    </Typography>
+                                    <Typography variant="h3" align="center">
+                                        ${analytics.totalEarnings}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={12}>
+                            <Paper elevation={3} sx={{ p: 2, minHeight: '400px' }}>
+                                <Typography variant="h5" component="div" gutterBottom>
+                                    Peak Hours
                                 </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    Average Parked Duration
+                                <Bar
+                                    data={peakHoursData}
+                                    options={{options}}
+                                />
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={12} md={6}>
+                            <Paper elevation={3} sx={{ p: 2, minHeight: '400px' }}>
+                                <Typography variant="h5" component="div" gutterBottom>
+                                    Cars Parked by Type
                                 </Typography>
-                                <Typography variant="h3" align="center">
-                                    {analytics.avgHours ? analytics.avgHours.toFixed(2) : 'N/A'} hours
+                                <Pie data={carTypeData} options={pieOptions} />
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Paper elevation={3} sx={{ p: 2, minHeight: '400px' }}>
+                                <Typography variant="h5" component="div" gutterBottom>
+                                    Revenue Comparison
                                 </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    Total Earnings
+                                <Doughnut data={revenueComparisonData} options={revenueComparisonOptions} />
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={12}>
+                            <Paper elevation={3} sx={{ p: 2, minHeight: '400px' }}>
+                                <Typography variant="h5" component="div" gutterBottom>
+                                    Revenue Over Time
                                 </Typography>
-                                <Typography variant="h3" align="center">
-                                    ${analytics.totalEarnings}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div" align="center">
-                                    Customers Catered 
-                                </Typography>
-                                <Typography variant="h3" align="center">
-                                    {analytics.returningCustomers}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Box>
-                    <Paper elevation={3} sx={{ p: 2, minHeight: '400px', mt: 2 }}>
-                        <Typography variant="h5" component="div" gutterBottom>
-                            Peak Hours
-                        </Typography>
-                        <Bar
-                            data={peakHoursData}
-                            options={{
-                                scales: {
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Hours',
+                                <Line
+                                    data={revenueOverTimeData}
+                                    options={{
+                                        scales: {
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Date',
+                                                },
+                                            },
+                                            y: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Revenue',
+                                                },
+                                            },
                                         },
-                                    },
-                                    y: {
-                                        title: {
-                                            display: true,
-                                            text: 'Cars Parked',
-                                        },
-                                    },
-                                },
-                            }}
-                        />
-                    </Paper>
-                    <Paper elevation={3} sx={{ p: 2, minHeight: '400px', mt: 2 }}>
-                        <Typography variant="h5" component="div" gutterBottom>
-                            Cars Parked by Type
-                        </Typography>
-                        <Pie data={carTypeData} options={pieOptions} />
-                    </Paper>
-                    <Paper elevation={3} sx={{ p: 2, minHeight: '400px', mt: 2 }}>
-                        <Typography variant="h5" component="div" gutterBottom>
-                            Revenue Over Time
-                        </Typography>
-                        <Line data={revenueOverTimeData} options={{
-                            scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date',
-                                    },
-                                },
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Revenue',
-                                    },
-                                },
-                            },
-                        }} />
-                    </Paper>
+                                    }}
+                                />
+                            </Paper>
+                        </Grid>
+                    </Grid>
                 </>
             )}
         </Box>
     );
 }
-                    
