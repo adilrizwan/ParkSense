@@ -164,10 +164,13 @@ exports.getAnalytics = async (lotID, ownerID) => {
       .input("LotID", sql.Int, lotID)
       .input("OwnerID", sql.Int, ownerID)
       .query(`
-        SELECT COUNT(*) AS carsParked,
-               AVG(ps.Rating) AS avgRating,
-               AVG(DATEDIFF(HOUR, ps.InTime, ps.OutTime)) AS avgHours,
-               SUM(ps.Charge) AS totalEarnings
+        SELECT 
+               COUNT(*) AS carsParked,
+               COUNT(CASE WHEN ps.OutTime IS NULL THEN 1 END) AS ongoingSessions,
+               AVG(CAST(ps.Rating AS DECIMAL(10, 2))) AS avgRating,
+               AVG(CAST(DATEDIFF(MINUTE, ps.InTime, ISNULL(ps.OutTime, GETDATE())) AS FLOAT) / 60) AS avgHours,
+               SUM(ps.Charge) AS totalEarnings,
+               COUNT(DISTINCT ps.CarID) AS returningCustomers
         FROM ParkingSession ps
         JOIN Lot l ON ps.LotID = l.LotID
         WHERE l.LotOwnerID = @OwnerID AND l.LotID = @LotID;
@@ -178,20 +181,29 @@ exports.getAnalytics = async (lotID, ownerID) => {
         GROUP BY DATEPART(HOUR, InTime)
         ORDER BY hour;
 
-        SELECT ZoneID AS zone, COUNT(*) AS count
+        SELECT c.Type AS type, COUNT(*) * 100.0 / SUM(COUNT(*)) OVER() AS percentage
         FROM ParkingSession ps
-        JOIN LotZone lz ON ps.LotID = lz.LotID
+        JOIN Car c ON ps.CarID = c.CarID
         WHERE ps.LotID = @LotID
-        GROUP BY ZoneID;
+        GROUP BY c.Type;
+
+        SELECT CONVERT(DATE, ps.InTime) AS date, SUM(ps.Charge) AS revenue
+        FROM ParkingSession ps
+        WHERE ps.LotID = @LotID
+        GROUP BY CONVERT(DATE, ps.InTime)
+        ORDER BY date;
       `);
 
     const result = {
       carsParked: query.recordsets[0][0].carsParked,
+      ongoingSessions: query.recordsets[0][0].ongoingSessions,
       avgRating: query.recordsets[0][0].avgRating,
       avgHours: query.recordsets[0][0].avgHours,
       totalEarnings: query.recordsets[0][0].totalEarnings,
+      returningCustomers: query.recordsets[0][0].returningCustomers,
       peakHours: query.recordsets[1],
-      zoneWise: query.recordsets[2]
+      carTypeCounts: query.recordsets[2],
+      revenueOverTime: query.recordsets[3]
     };
 
     return result;
@@ -200,6 +212,11 @@ exports.getAnalytics = async (lotID, ownerID) => {
     throw error;
   }
 };
+
+
+
+
+
 
 exports.getLots = async (ownerID) => {
   try {

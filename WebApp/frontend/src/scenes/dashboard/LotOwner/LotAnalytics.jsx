@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Box, Typography, Card, CardContent, MenuItem, Select, FormControl, InputLabel, CircularProgress, Alert, Paper } from '@mui/material';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Line, Pie } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import dayjs from 'dayjs';
 
-Chart.register(...registerables);
+
+Chart.register(...registerables, ChartDataLabels);
 
 export default function AnalyticsDashboard() {
     const token = localStorage.getItem('token');
@@ -14,11 +17,16 @@ export default function AnalyticsDashboard() {
     const [selectedLot, setSelectedLot] = useState('');
     const [analytics, setAnalytics] = useState({
         carsParked: 0,
+        ongoingSessions: 0,
         avgRating: 0,
         avgHours: 0,
         peakHours: [],
         totalEarnings: 0,
-        zoneWise: []
+        carTypeCounts: [],
+        totalSessions: 0,
+        avgSessionDuration: 0,
+        returningCustomers: 0,
+        revenueOverTime: []
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -70,26 +78,95 @@ export default function AnalyticsDashboard() {
     };
 
     const peakHoursData = {
-        labels: analytics.peakHours.map(item => item.hour),
+        labels: analytics.peakHours?.map(item => item.hour || 0),
         datasets: [
             {
-                label: 'Count',
-                data: analytics.peakHours.map(item => item.count),
-                fill: false,
+                type: 'bar',
+                label: 'Cars Parked',
+                data: analytics.peakHours?.map(item => item.count || 0),
                 backgroundColor: 'rgba(75,192,192,0.2)',
                 borderColor: 'rgba(75,192,192,1)',
+                borderWidth: 1,
+            },
+            {
+                type: 'line',
+                label: 'Cars Parked Line',
+                data: analytics.peakHours?.map(item => item.count || 0),
+                borderColor: 'rgba(153,102,255,1)',
+                fill: false,
             },
         ],
     };
 
-    const zoneWiseData = {
-        labels: analytics.zoneWise.map(item => item.zone),
+    const carTypeData = {
+        labels: analytics.carTypeCounts?.map(item => item.type || ''),
         datasets: [
             {
-                label: 'Count',
-                data: analytics.zoneWise.map(item => item.count),
-                backgroundColor: 'rgba(75,192,192,0.2)',
-                borderColor: 'rgba(75,192,192,1)',
+                label: 'Percentage',
+                data: analytics.carTypeCounts?.map(item => item.percentage || 0),
+                backgroundColor: [
+                    'rgba(75,192,192,0.2)',
+                    'rgba(153,102,255,0.2)',
+                    'rgba(255,159,64,0.2)',
+                    'rgba(255,99,132,0.2)',
+                    'rgba(54,162,235,0.2)',
+                    'rgba(255,206,86,0.2)',
+                    'rgba(75,192,192,0.2)',
+                    'rgba(153,102,255,0.2)',
+                    'rgba(255,159,64,0.2)',
+                ],
+                borderColor: [
+                    'rgba(75,192,192,1)',
+                    'rgba(153,102,255,1)',
+                    'rgba(255,159,64,1)',
+                    'rgba(255,99,132,1)',
+                    'rgba(54,162,235,1)',
+                    'rgba(255,206,86,1)',
+                    'rgba(75,192,192,1)',
+                    'rgba(153,102,255,1)',
+                    'rgba(255,159,64,1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const pieOptions = {
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[0].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = (value * 100 / sum).toFixed(2) + "%";
+                    return percentage;
+                },
+                color: '#fff',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        return `${tooltipItem.label}: ${tooltipItem.raw.toFixed(2)}%`;
+                    },
+                },
+            },
+        },
+    };
+
+    const revenueOverTimeData = {
+        labels: analytics.revenueOverTime?.map(item => dayjs(item.date).format('DD-MM-YYYY')),
+        datasets: [
+            {
+                label: 'Revenue',
+                data: analytics.revenueOverTime?.map(item => item.revenue || 0),
+                backgroundColor: 'rgba(255,99,132,0.2)',
+                borderColor: 'rgba(255,99,132,1)',
                 borderWidth: 1,
             },
         ],
@@ -97,7 +174,7 @@ export default function AnalyticsDashboard() {
 
     return (
         <Box p={2}>
-            <Typography align='left' sx={{ mt: 2 }} variant="h2">
+            <Typography align='center' sx={{ mt: 2 }} variant="h2">
                 Analytics Dashboard
             </Typography>
             {error && (
@@ -118,7 +195,7 @@ export default function AnalyticsDashboard() {
                             {lot.LotName}
                         </MenuItem>
                     ))}
-                </Select>
+                        </Select>
             </FormControl>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -129,41 +206,61 @@ export default function AnalyticsDashboard() {
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                         <Card sx={{ minWidth: 275 }}>
                             <CardContent>
-                                <Typography variant="h5" component="div">
-                                    Cars Parked
+                                <Typography variant="h5" component="div" align="center">
+                                    All-time Cars Parked
                                 </Typography>
-                                <Typography variant="h4">
+                                <Typography variant="h3" align="center">
                                     {analytics.carsParked}
                                 </Typography>
                             </CardContent>
                         </Card>
                         <Card sx={{ minWidth: 275 }}>
                             <CardContent>
-                                <Typography variant="h5" component="div">
-                                    Avg Rating
+                                <Typography variant="h5" component="div" align="center">
+                                    Currently Parked Cars
                                 </Typography>
-                                <Typography variant="h4">
-                                    {analytics.avgRating}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                        <Card sx={{ minWidth: 275 }}>
-                            <CardContent>
-                                <Typography variant="h5" component="div">
-                                    Avg Hours
-                                </Typography>
-                                <Typography variant="h4">
-                                    {analytics.avgHours}
+                                <Typography variant="h3" align="center">
+                                    {analytics.ongoingSessions}
                                 </Typography>
                             </CardContent>
                         </Card>
                         <Card sx={{ minWidth: 275 }}>
                             <CardContent>
-                                <Typography variant="h5" component="div">
+                                <Typography variant="h5" component="div" align="center">
+                                    Average Rating
+                                </Typography>
+                                <Typography variant="h3" align="center">
+                                    {analytics.avgRating ? analytics.avgRating.toFixed(2) : 'N/A'}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                        <Card sx={{ minWidth: 275 }}>
+                            <CardContent>
+                                <Typography variant="h5" component="div" align="center">
+                                    Average Parked Duration
+                                </Typography>
+                                <Typography variant="h3" align="center">
+                                    {analytics.avgHours ? analytics.avgHours.toFixed(2) : 'N/A'} hours
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                        <Card sx={{ minWidth: 275 }}>
+                            <CardContent>
+                                <Typography variant="h5" component="div" align="center">
                                     Total Earnings
                                 </Typography>
-                                <Typography variant="h4">
+                                <Typography variant="h3" align="center">
                                     ${analytics.totalEarnings}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                        <Card sx={{ minWidth: 275 }}>
+                            <CardContent>
+                                <Typography variant="h5" component="div" align="center">
+                                    Customers Catered 
+                                </Typography>
+                                <Typography variant="h3" align="center">
+                                    {analytics.returningCustomers}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -172,16 +269,56 @@ export default function AnalyticsDashboard() {
                         <Typography variant="h5" component="div" gutterBottom>
                             Peak Hours
                         </Typography>
-                        <Line data={peakHoursData} />
+                        <Bar
+                            data={peakHoursData}
+                            options={{
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Hours',
+                                        },
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Cars Parked',
+                                        },
+                                    },
+                                },
+                            }}
+                        />
                     </Paper>
                     <Paper elevation={3} sx={{ p: 2, minHeight: '400px', mt: 2 }}>
                         <Typography variant="h5" component="div" gutterBottom>
-                            Zone Wise Statistics
+                            Cars Parked by Type
                         </Typography>
-                        <Bar data={zoneWiseData} />
+                        <Pie data={carTypeData} options={pieOptions} />
+                    </Paper>
+                    <Paper elevation={3} sx={{ p: 2, minHeight: '400px', mt: 2 }}>
+                        <Typography variant="h5" component="div" gutterBottom>
+                            Revenue Over Time
+                        </Typography>
+                        <Line data={revenueOverTimeData} options={{
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Date',
+                                    },
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Revenue',
+                                    },
+                                },
+                            },
+                        }} />
                     </Paper>
                 </>
             )}
         </Box>
     );
 }
+                    

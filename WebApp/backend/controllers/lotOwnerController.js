@@ -165,6 +165,7 @@ exports.getAnalytics = async (req, res) => {
   }
 };
 
+
 exports.getLots = async (req, res) => {
   if (req.user.role === "LOTOWNER") {
     try {
