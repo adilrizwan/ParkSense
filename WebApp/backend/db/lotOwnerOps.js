@@ -212,21 +212,22 @@ exports.getAnalytics = async (lotID, ownerID) => {
         AND CONVERT(DATE, ps.OutTime) = CONVERT(DATE, GETDATE());
       `);
 
+    const analytics = query.recordsets[0][0] || {};
     const result = {
-      carsParked: query.recordsets[0][0].carsParked,
-      ongoingSessions: query.recordsets[0][0].ongoingSessions,
-      avgRating: query.recordsets[0][0].avgRating,
-      avgHours: query.recordsets[0][0].avgHours,
-      totalEarnings: query.recordsets[0][0].totalEarnings,
-      totalSessions: query.recordsets[0][0].totalSessions,
-      avgSessionDuration: query.recordsets[0][0].avgSessionDuration,
-      returningCustomers: query.recordsets[0][0].returningCustomers,
-      availableSpaces: `${query.recordsets[0][0].spacesAvailable} / ${query.recordsets[0][0].totalCapacity}`,
-      peakHours: query.recordsets[1],
-      carTypeCounts: query.recordsets[2],
-      revenueOverTime: query.recordsets[3],
-      revenueComparison: query.recordsets[4],
-      currentDayRevenue: query.recordsets[5][0]?.currentDayRevenue || 0,
+      carsParked: analytics.carsParked || 0,
+      ongoingSessions: analytics.ongoingSessions || 0,
+      avgRating: analytics.avgRating || 0,
+      avgHours: analytics.avgHours || 0,
+      totalEarnings: analytics.totalEarnings || 0,
+      totalSessions: analytics.totalSessions || 0,
+      avgSessionDuration: analytics.avgSessionDuration || 0,
+      returningCustomers: analytics.returningCustomers || 0,
+      availableSpaces: `${analytics.spacesAvailable || 0} / ${analytics.totalCapacity || 0}`,
+      peakHours: query.recordsets[1] || [],
+      carTypeCounts: query.recordsets[2] || [],
+      revenueOverTime: query.recordsets[3] || [],
+      revenueComparison: query.recordsets[4] || [],
+      currentDayRevenue: (query.recordsets[5] && query.recordsets[5][0] && query.recordsets[5][0].currentDayRevenue) || 0,
     };
 
     return result;
@@ -235,6 +236,7 @@ exports.getAnalytics = async (lotID, ownerID) => {
     throw error;
   }
 };
+
 
 
 
