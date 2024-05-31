@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, useTheme, Switch, IconButton } from "@mui/material"
+import { Box, useTheme, IconButton } from "@mui/material"
 import { useContext } from "react"
 import { ColorModeContext } from "../constants/theme"
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
@@ -60,21 +60,6 @@ function GuestUser() {
                                 <LightModeOutlinedIcon sx={{ color: theme.palette.black.main }} />
                             )}
                         </IconButton>
-                        {/* <Switch
-                            checked={theme.palette.mode === 'dark'}
-                            onChange={colorMode.toggleColorMode}
-                            icon={<LightModeOutlinedIcon style={{ color: theme.palette.primary.main }} />}
-                            checkedIcon={<DarkModeOutlinedIcon style={{ color: theme.palette.primary.main }} />}
-                            size='large'
-                            sx={{
-                                '& .MuiSwitch-thumb': {
-                                    color: theme.palette.primary.main
-                                },
-                                '& .MuiSwitch-track': {
-                                    backgroundColor: theme.palette.primary.main
-                                }
-                            }} */}
-                        {/* /> */}
 
                         <Button
                             sx={{ margin: "10px" }}
@@ -99,4 +84,3 @@ function GuestUser() {
 }
 
 export default GuestUser;
-

@@ -165,11 +165,40 @@ exports.getAnalytics = async (req, res) => {
   }
 };
 
-
 exports.getLots = async (req, res) => {
   if (req.user.role === "LOTOWNER") {
     try {
       const lots = await lotOwnerOps.getLots(req.user.id);
+      res.json({ lots });
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ message: error });
+    }
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+exports.getRates = async (req, res) => {
+  if (req.user.role === "LOTOWNER") {
+    try {
+      const { lotID } = req.params;
+      const lots = await lotOwnerOps.getRates(req.user.id, lotID);
+      res.json({ lots });
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ message: error });
+    }
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+exports.setRates = async (req, res) => {
+  if (req.user.role === "LOTOWNER") {
+    try {
+      const Rates = req.body;
+      const lots = await lotOwnerOps.setRates(req.user.id, Rates);
       res.json({ lots });
     } catch (error) {
       console.log(error);

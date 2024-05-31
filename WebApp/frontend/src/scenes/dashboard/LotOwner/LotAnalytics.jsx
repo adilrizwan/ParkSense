@@ -9,7 +9,6 @@ Chart.register(...registerables, ChartDataLabels);
 
 export default function AnalyticsDashboard() {
     const token = localStorage.getItem('token');
-    console.log('Token from localStorage:', token);
 
     const [lots, setLots] = useState([]);
     const [selectedLot, setSelectedLot] = useState('');
@@ -26,8 +25,8 @@ export default function AnalyticsDashboard() {
         returningCustomers: 0,
         availableSpaces: 0,
         revenueOverTime: [],
-        revenueComparison: [], 
-        currentDayRevenue: 0,                                                                                                  
+        revenueComparison: [],
+        currentDayRevenue: 0,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -98,7 +97,7 @@ export default function AnalyticsDashboard() {
             },
         ],
     };
-    
+
     const options = {
         scales: {
             x: {
@@ -107,7 +106,7 @@ export default function AnalyticsDashboard() {
                     text: 'Hours',
                 },
                 ticks: {
-                    callback: function(value, index, values) {
+                    callback: function (value, index, values) {
                         // This assumes that `values` are in the format "HH:00"
                         if (typeof value === 'string' && value.includes(':')) {
                             return value;
@@ -224,7 +223,7 @@ export default function AnalyticsDashboard() {
             {
                 label: 'Revenue',
                 data: analytics.revenueComparison?.map(item => item.revenue || 0),
-                backgroundColor: analytics.revenueComparison?.map(item => 
+                backgroundColor: analytics.revenueComparison?.map(item =>
                     item.LotID === selectedLot ? 'rgba(75,192,192,1)' : 'rgba(153,102,255,1)'
                 ),
                 borderColor: 'rgba(255,255,255,0.8)',
@@ -337,7 +336,7 @@ export default function AnalyticsDashboard() {
                                         Average Rating
                                     </Typography>
                                     <Typography variant="h3" align="center">
-                                    {analytics.avgRating ? analytics.avgRating.toFixed(2) : 'N/A'}
+                                        {analytics.avgRating ? analytics.avgRating.toFixed(2) : 'N/A'}
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -387,7 +386,7 @@ export default function AnalyticsDashboard() {
                                 </Typography>
                                 <Bar
                                     data={peakHoursData}
-                                    options={{options}}
+                                    options={{ options }}
                                 />
                             </Paper>
                         </Grid>

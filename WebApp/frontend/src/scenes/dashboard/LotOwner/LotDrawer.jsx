@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+import PaidIcon from '@mui/icons-material/Paid';
 import AddHomeIcon from '@mui/icons-material/AddHome';
 import { List, ListItemButton, Box, Typography, IconButton, useTheme, ListItemIcon, ListItemText, Divider, Toolbar, styled, ThemeProvider, useMediaQuery } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -17,6 +18,7 @@ import LotSupport from './LotSupport';
 import LotProfile from './LotProfile';
 import LotAdd from './LotAdd';
 import LotAnalytics from './LotAnalytics';
+import LotRates from './LotRates';
 
 const drawerWidth = 240;
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -143,6 +145,15 @@ const LotDrawerList = ({ onTabClick }) => (
                 <AddHomeIcon />
             </ListItemIcon>
             <ListItemText primary="Add Lot" />
+        </ListItemButton>
+        <Divider sx={{ mx: 2 }} />
+
+
+        <ListItemButton onClick={() => onTabClick(<LotRates />)}>
+            <ListItemIcon>
+                <PaidIcon />
+            </ListItemIcon>
+            <ListItemText primary="Hourly Rates" />
         </ListItemButton>
         <Divider sx={{ mx: 2 }} />
 
