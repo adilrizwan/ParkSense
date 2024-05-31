@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Grid, Paper, Badge, Typography, Box, Button, Alert, Pagination, useMediaQuery, Modal, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Grid, Paper, Typography, Box, Button, Alert, Pagination, useMediaQuery, Modal, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
@@ -117,7 +117,6 @@ export default function CarView() {
                         setSnackbarMessage('An unexpected error occurred.');
                     }
                 } else {
-                    // Network error
                     setSnackbarSeverity('error');
                     setSnackbarMessage('Network error: ' + error.message);
                 }
@@ -202,8 +201,6 @@ export default function CarView() {
             setSnackbarMessage('Error adding car');
         }
     };
-
-
     return (
         <Box p={2}>
             <Typography align='left' sx={{ mt: 0, mb: 1 }} variant="h2">
@@ -223,6 +220,7 @@ export default function CarView() {
                     {snackbarMessage}
                 </Alert>
             )}
+
             <Modal
                 open={isAddCarOpen}
                 onClose={handleCloseAddCar}
@@ -411,7 +409,7 @@ export default function CarView() {
                                         <Typography variant="h5" gutterBottom>
                                             {car.Make + " " + car.Model}
                                         </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                                        {/* <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
                                             <Badge
                                                 variant="dot"
                                                 color={car.Status === 'ACTIVE' ? 'green' : 'yellow'}
@@ -422,7 +420,7 @@ export default function CarView() {
                                             <Typography variant="subtitle" gutterBottom sx={{ ml: 1 }}>
                                                 {car.Status}
                                             </Typography>
-                                        </Box>
+                                        </Box> */}
                                     </Box>
                                     {isExtraExtraSmallScreen ? (
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 'fit-content' }}>
@@ -462,7 +460,7 @@ export default function CarView() {
                                             <Typography variant="h5" gutterBottom>
                                                 {car.Make + " " + car.Model}
                                             </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                                            {/* <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
                                                 <Badge
                                                     variant="dot"
                                                     color={car.Status === 'ACTIVE' ? 'success' : car.Status === 'INACTIVE' ? 'error' : 'warning'}
@@ -477,7 +475,7 @@ export default function CarView() {
                                                 <Typography variant="subtitle" gutterBottom sx={{ ml: 1 }}>
                                                     {car.Status}
                                                 </Typography>
-                                            </Box>
+                                            </Box> */}
                                         </Box>
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 'fit-content' }}>
@@ -541,9 +539,9 @@ export default function CarView() {
                     <Typography variant="body1" gutterBottom>
                         <strong>Registered:</strong> {selectedCar && selectedCar.RegisteredCity + ", " + selectedCar.RegisteredCountry}
                     </Typography>
-                    <Typography variant="body1" gutterBottom>
+                    {/* <Typography variant="body1" gutterBottom>
                         <strong>Status:</strong> {selectedCar && selectedCar.Status}
-                    </Typography>
+                    </Typography> */}
                 </Box>
             </Modal>
             <Modal

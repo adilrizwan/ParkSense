@@ -179,3 +179,22 @@ exports.getHistory = async (req, res) => {
     res.status(401).json({ message: "Unauthorized" });
   }
 };
+
+exports.getUserCoins = async (req, res) => {
+  if (req.user.role === "CAROWNER") {
+    try {
+      const userId = req.user.id;
+      const result = await carOwnerOps.getUserCoins(userId);
+      if (result) {
+        res.json({ coins: result.Coins });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ message: "Failed to fetch user coins", error });
+    }
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};

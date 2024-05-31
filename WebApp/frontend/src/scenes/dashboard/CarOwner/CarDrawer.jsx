@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import HistoryIcon from '@mui/icons-material/History';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -51,6 +52,7 @@ export default function SideBar({ onTabClick }) {
     const jwtToken = localStorage.getItem('token');
     const isScreenSmall = useMediaQuery(theme.breakpoints.down(700));
     const [open, setOpen] = React.useState(true);
+    const [coins, setCoins] = useState([]);
     const toggleDrawer = () => {
         setOpen(!open);
     };
@@ -59,6 +61,7 @@ export default function SideBar({ onTabClick }) {
 
     const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
     const filePath = 'avatars/' + decodedPayload.avatar + '.jpg'
+    const coinImg = "https://firebasestorage.googleapis.com/v0/b/parksense-82db2.appspot.com/o/Homepage%2Fcoin.png?alt=media&token=6781ab83-23fd-42d0-9b8d-6943a892a636"
 
     useEffect(() => {
         const imageRef = ref(storage, filePath);
@@ -66,6 +69,22 @@ export default function SideBar({ onTabClick }) {
             .then((url) => setAvatarUrl(url))
             .catch((error) => console.error("Error getting download URL:", error));
     }, [filePath]);
+    useEffect(() => {
+        const fetchCoins = async () => {
+            try {
+                const response = await axios.get('http://localhost:8000/car/coins', {
+                    headers: {
+                        Authorization: jwtToken,
+                    },
+                });
+                setCoins(response.data.coins);
+                console.log(coins)
+            } catch (error) {
+                console.error('Error fetching coins:', error);
+            }
+        };
+        fetchCoins();
+    }, [jwtToken, coins]);
     return (
         <ThemeProvider theme={theme}>
             <Drawer variant="permanent" open={!isScreenSmall && open}>
@@ -120,16 +139,21 @@ export default function SideBar({ onTabClick }) {
                 <List>
                     <CarDrawerList onTabClick={onTabClick} />
                 </List>
+                {open && !isScreenSmall && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <img src={coinImg} alt="coins" style={{ width: '24px', height: '24px', marginRight: '8px' }} />
+                            <Typography variant="subtitle">{coins}</Typography>
+                        </Box>
+                    </Box>
+                )}
             </Drawer>
         </ThemeProvider>
     )
 }
 
 const CarDrawerList = ({ onTabClick }) => (
-
     <React.Fragment>
-
-        {/* <Divider /> */}
         <ListItemButton onClick={() => onTabClick(<CarView />)}>
             <ListItemIcon>
                 <DirectionsCarIcon />
@@ -137,8 +161,6 @@ const CarDrawerList = ({ onTabClick }) => (
             <ListItemText primary="Vehicles" />
         </ListItemButton>
         <Divider sx={{ mx: 2 }} />
-
-        {/* <Divider /> */}
         <ListItemButton onClick={() => onTabClick(<CarHistory />)}>
             <ListItemIcon>
                 <HistoryIcon />
@@ -146,8 +168,6 @@ const CarDrawerList = ({ onTabClick }) => (
             <ListItemText primary="History" />
         </ListItemButton>
         <Divider sx={{ mx: 2 }} />
-
-        {/* <Divider /> */}
         <ListItemButton onClick={() => onTabClick(<CarProfile />)}>
             <ListItemIcon>
                 <PersonOutlinedIcon />
@@ -155,8 +175,6 @@ const CarDrawerList = ({ onTabClick }) => (
             <ListItemText primary="Profile" />
         </ListItemButton>
         <Divider sx={{ mx: 2 }} />
-
-        {/* <Divider /> */}
         <ListItemButton onClick={() => onTabClick(<CarSupport />)}>
             <ListItemIcon>
                 <HelpOutlineOutlinedIcon />
@@ -165,4 +183,4 @@ const CarDrawerList = ({ onTabClick }) => (
         </ListItemButton>
         <Divider sx={{ mx: 2 }} />
     </React.Fragment>
-)
+);

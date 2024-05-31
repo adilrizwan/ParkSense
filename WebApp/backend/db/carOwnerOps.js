@@ -146,3 +146,17 @@ exports.getHistory = async (userID) => {
     throw error;
   }
 };
+
+exports.getUserCoins = async (userId) => {
+  try {
+    let poolS = await pool;
+    let query = await poolS
+      .request()
+      .input("UserID", sql.Int, userId)
+      .query(`SELECT Coins FROM CarOwner WHERE ID = @UserID`);
+    return query.recordset[0];
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};

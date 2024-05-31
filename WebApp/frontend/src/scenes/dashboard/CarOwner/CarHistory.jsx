@@ -5,7 +5,7 @@ import { pageSize } from '../../../constants/theme';
 
 export default function CarHistory() {
     const token = localStorage.getItem('token');
-    const [parkingHistory, setParkingHistory] = useState([]); // Initialize as empty array
+    const [parkingHistory, setParkingHistory] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -36,7 +36,7 @@ export default function CarHistory() {
                 Parking History
             </Typography>
             {parkingHistory.length > 0 ? (
-                <Grid container spacing={2} sx={{mt:1}}>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
                     {parkingHistory.map((parking, index) => (
                         <Grid item xs={12} sm={6} key={index}>
                             <Paper elevation={3} sx={{ p: 4 }}>
@@ -54,6 +54,9 @@ export default function CarHistory() {
                                 </Typography> */}
                                 <Typography variant="body1" gutterBottom>
                                     Duration: {parking.Duration}
+                                </Typography>
+                                <Typography variant="body1" gutterBottom>
+                                    Rating: {parking.Rating}
                                 </Typography>
                                 <Typography variant="body1" gutterBottom>
                                     Coins Charged: {parking.Charge}
