@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState, useEffect } from 'react';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SearchIcon from '@mui/icons-material/Search';
@@ -9,7 +10,12 @@ import MuiDrawer from '@mui/material/Drawer';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { List, ListItemButton, Box, Typography, IconButton, useTheme, ListItemIcon, ListItemText, Divider, Toolbar, styled, ThemeProvider, useMediaQuery } from '@mui/material';
-
+import { initializeApp } from 'firebase/app';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import firebaseConfig from '../../../constants/firebaseConfig'
+// import AdminTopUp from './AdminTopUp';
+// import AdminComplaints from './AdminComplaints';
+// import AdminSearch from './AdminSearch';
 
 const drawerWidth = 240;
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -38,14 +44,29 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-export default function SideBar(props) {
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app, "gs://parksense-82db2.appspot.com");
+
+export default function SideBar({ onTabClick }) {
     const theme = useTheme();
+    const jwtToken = localStorage.getItem('token');
     const isScreenSmall = useMediaQuery(theme.breakpoints.down(700));
     const [open, setOpen] = React.useState(true);
     const toggleDrawer = () => {
         setOpen(!open);
     };
+    const [avatarUrl, setAvatarUrl] = useState(null);
+    const [payload] = jwtToken.split('.').slice(1, 2);
 
+    const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    const filePath = 'avatars/' + 1 + '.jpg'
+
+    useEffect(() => {
+        const imageRef = ref(storage, filePath);
+        getDownloadURL(imageRef)
+            .then((url) => setAvatarUrl(url))
+            .catch((error) => console.error("Error getting download URL:", error));
+    }, [filePath]);
     return (
         <ThemeProvider theme={theme}>
             <Drawer variant="permanent" open={!isScreenSmall && open}>
@@ -62,16 +83,22 @@ export default function SideBar(props) {
                     </IconButton>
                 </Toolbar>
                 <Divider />
-                {open && (
+                {open && !isScreenSmall && (
                     <Box m="20px">
                         <Box display="flex" justifyContent="center" alignItems="center">
-                            <img
-                                alt="profile-user"
-                                width="100px"
-                                height="100px"
-                                // src={psy_avatar}
-                                style={{ cursor: "pointer", borderRadius: "50%" }}
-                            />
+                            {avatarUrl ? (
+                                <img
+                                    alt="profile-user"
+                                    width="100px"
+                                    height="100px"
+                                    src={avatarUrl}
+                                    style={{ cursor: "pointer", borderRadius: "50%" }}
+                                />
+                            ) : (
+                                <PersonOutlinedIcon
+                                    style={{ fontSize: "100px", color: theme.palette.text.primary }}
+                                />
+                            )}
                         </Box>
                         <Box textAlign="center">
                             <Typography
@@ -79,25 +106,28 @@ export default function SideBar(props) {
                                 fontWeight="bold"
                                 sx={{ m: "10px 0 0 0" }}
                             >
-                                {localStorage.getItem('userName')}
+                                {decodedPayload.name}
+                            </Typography>
+                        </Box>
+                        <Box textAlign="center">
+                            <Typography
+                                variant="subtitle"
+                            >
+                                Admin
                             </Typography>
                         </Box>
                     </Box>
                 )}
                 <List>
-                    <AdminDrawerList
-                    //   onDashboardClick={props.onDashboardClick}
-                    //   onUpdateProfileClick={props.onUpdateProfileClick}
-                    //   onSearchClick={props.onSearchClick}
-                    //   onCVClick={props.onCVClick}
-                    />
+                    <AdminDrawerList onTabClick={onTabClick} />
                 </List>
             </Drawer>
         </ThemeProvider>
     )
 }
 
-const AdminDrawerList = () => (
+
+const AdminDrawerList = ({ onTabClick }) => (
     <React.Fragment>
         {/* <Divider /> */}
         <ListItemButton>
@@ -118,30 +148,30 @@ const AdminDrawerList = () => (
         <Divider sx={{ mx: 2 }} />
 
         {/* <Divider /> */}
-        <ListItemButton>
+        {/* <ListItemButton>
             <ListItemIcon>
                 <BarChartIcon />
             </ListItemIcon>
             <ListItemText primary="Analytics" />
         </ListItemButton>
-        <Divider sx={{ mx: 2 }} />
+        <Divider sx={{ mx: 2 }} /> */}
         {/* <Divider /> */}
-        <ListItemButton>
+        {/* <ListItemButton onClick={() => onTabClick(<AdminTopUp />)}>
             <ListItemIcon>
                 <MonetizationOnIcon />
             </ListItemIcon>
             <ListItemText primary="Credit Coins" />
         </ListItemButton>
-        <Divider sx={{ mx: 2 }} />
+        <Divider sx={{ mx: 2 }} /> */}
 
         {/* <Divider /> */}
-        <ListItemButton>
+        {/* <ListItemButton>
             <ListItemIcon>
                 <PersonOutlinedIcon />
             </ListItemIcon>
             <ListItemText primary="Profile" />
         </ListItemButton>
-        <Divider sx={{ mx: 2 }} />
+        <Divider sx={{ mx: 2 }} /> */}
 
         {/* <Divider /> */}
         <ListItemButton>

@@ -14,28 +14,28 @@ exports.getProfile = async (req, res) => {
     res.status(401).json({ message: "Unauthorized" });
   }
 };
-exports.credit = async (req, res) => {
-  if (req.user.role === "ADMIN") {
-    try {
-      const details = req.body;
-      if (details.amount < 1) {
-        res.status(200).json({ message: "Invalid amount" });
-        return;
-      }
-      const credit = await adminOps.credit(details.email, details.amount);
-      if (credit === 1) {
-        res.status(200).json({ message: "Success" });
-      } else {
-        res.status(204).json({ message: "User does not exist" });
-      }
-    } catch (error) {
-      console.log(error);
-      res.status(400).json({ message: error });
-    }
-  } else {
-    res.status(401).json({ message: "Unauthorized" });
-  }
-};
+// exports.credit = async (req, res) => {
+//   if (req.user.role === "ADMIN") {
+//     try {
+//       const details = req.body;
+//       if (details.amount < 1) {
+//         res.status(200).json({ message: "Invalid amount" });
+//         return;
+//       }
+//       const credit = await adminOps.credit(details.ID, details.Amount);
+//       if (credit === 1) {
+//         res.status(200).json({ message: "Success" });
+//       } else {
+//         res.status(204).json({ message: "User does not exist" });
+//       }
+//     } catch (error) {
+//       console.log(error);
+//       res.status(400).json({ message: error });
+//     }
+//   } else {
+//     res.status(401).json({ message: "Unauthorized" });
+//   }
+// };
 exports.updateProfile = async (req, res) => {
   if (req.user.role === "ADMIN") {
     try {
@@ -88,3 +88,17 @@ exports.search = async (req, res) => {
     res.status(400).json({ message: error });
   }
 };
+// exports.searchUserforCredit = async (req, res) => {
+//   if (req.user.role === "ADMIN") {
+//     try {
+//       const { email } = req.body;
+//       const profile = await adminOps.searchUserforCredit(email);
+//       res.json(profile);
+//     } catch (error) {
+//       console.log(error);
+//       res.status(400).json({ message: error });
+//     }
+//   } else {
+//     res.status(401).json({ message: "Unauthorized" });
+//   }
+// };

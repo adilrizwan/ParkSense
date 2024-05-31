@@ -16,20 +16,22 @@ exports.getProfile = async (id) => {
     res.status(400).json({ "DB ERROR": error });
   }
 };
-exports.credit = async (email, amount) => {
-  try {
-    // let pool = await mssql.connect(config);
-    let poolS = await pool;
-    let query = await poolS.request()
-    .input("Email", sql.VarChar, email)
-    .input("amount", sql.Int, amount)
-      .query(`exec CreditCoins @Email, @amount`);
-    return query.recordset[0][''];
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ "DB ERROR": error });
-  }
-};
+// exports.credit = async (CarID, Amount) => {
+//   try {
+//     // let pool = await mssql.connect(config);
+//     let poolS = await pool;
+//     let query = await poolS
+//       .request()
+//       .input("CarID", sql.Int, CarID)
+//       .input("Amount", sql.Int, Amount)
+//       .query(`exec CreditCoins @CarID, @Amount, 0`);
+//     return query.recordset[0][""];
+//   } catch (error) {
+//     console.log(error);
+//     res.status(400).json({ "DB ERROR": error });
+//   }
+// };
+
 exports.updateProfile = async (id, post) => {
   try {
     // let pool = await mssql.connect(config);
@@ -96,3 +98,17 @@ exports.search = async (role, col, key, offset, pageSize) => {
     res.status(400).json({ "DB ERROR": error });
   }
 };
+// exports.searchUserforCredit = async (Email) => {
+//   try {
+//     // let pool = await mssql.connect(config);
+//     let poolS = await pool;
+//     let query = await poolS
+//       .request()
+//       .input("Email", sql.VarChar, Email)
+//       .query(`SELECT * FROM CAROWNER WHERE EMAIL = @Email`);
+//     return query.recordset[0];
+//   } catch (error) {
+//     console.log(error);
+//     res.status(400).json({ "DB ERROR": error });
+//   }
+// };

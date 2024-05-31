@@ -1,0 +1,4 @@
+const carFieldNames = ["firstName", "lastName", "email", "phoneNo"];
+const lotFieldNames = ["Name", "email", "phoneNo"];
+
+export default { carFieldNames, lotFieldNames };

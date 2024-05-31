@@ -4,32 +4,12 @@ import SideBar from './AdminDrawer';
 
 export default function AdminDashboard() {
   const theme = useTheme();
-  // const [currentComponent, setCurrentComponent] = React.useState(<JobsApplied />);
-
-  // const handleProfileClick = () => {
-  //   setCurrentComponent(<ProfileApplicant />);
-  // };
-  // const handleDashboardClick = () => {
-  //   setCurrentComponent(<JobsApplied />);
-  // };
-  // const handleSearchClick = () => {
-  //   setCurrentComponent(<FindJobs />);
-  // };
-  // const handleCVClick = () => {
-  //   setCurrentComponent(<DownloadCV />);
-  // };
+  const [currentComponent, setCurrentComponent] = React.useState(null);
 
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ display: 'flex' }}>
-        <Grid>
-          <SideBar
-          // onDashboardClick={handleDashboardClick}
-          // onUpdateProfileClick={handleProfileClick}
-          // onSearchClick={handleSearchClick}
-          // onCVClick={handleCVClick}
-          />
-        </Grid>
+        <SideBar onTabClick={setCurrentComponent} />
         <Box
           component="main"
           sx={{
@@ -42,9 +22,8 @@ export default function AdminDashboard() {
           }}
         >
           <Container sx={{ mt: 3 }}>
-
             <Grid>
-              {/* {currentComponent} */}
+              {currentComponent}
             </Grid>
           </Container>
         </Box>
