@@ -175,7 +175,8 @@ exports.startSession = async (carRegNo, lotID, inTime, dayIn, userId) => {
       .input("LotID", sql.Int, lotID)
       .input("InTime", sql.DateTime, inTime)
       .input("DayIn", sql.Int, dayIn)
-      .query(`INSERT INTO ParkingSession (CarRegNo, LotID, InTime, DayIn) VALUES (@CarRegNo, @LotID, @InTime, @DayIn)`);
+      .query(`INSERT INTO ParkingSession (CarRegNo, LotID, InTime, DayIn) VALUES (@CarRegNo, @LotID, @InTime, @DayIn); UPDATE Lot SET SpaceAvailable = SpaceAvailable - 1 
+      WHERE LotID = @LotID AND SpaceAvailable > 0;`);
     
     return query;
   } catch (error) {
@@ -241,7 +242,8 @@ exports.endSession = async (carRegNo, outTime, dayOut) => {
       .input("Charge", sql.Decimal(10, 2), charge)
       .query(`UPDATE ParkingSession 
               SET OutTime = @OutTime, DayOut = @DayOut, Charge = @Charge 
-              WHERE CarRegNo = @CarRegNo AND OutTime IS NULL`);
+              WHERE CarRegNo = @CarRegNo AND OutTime IS NULL; UPDATE Lot SET SpaceAvailable = SpaceAvailable + 1 
+              WHERE LotID = @LotID;`);
 
     return { rowsAffected: queryUpdate.rowsAffected[0], charge };
   } catch (error) {

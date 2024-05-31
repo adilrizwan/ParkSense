@@ -13,7 +13,11 @@
   "license": "ISC",
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
+    "chart.js": "^4.4.3",
     "colors": "^1.4.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
@@ -23,6 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "msnodesqlv8": "^4.1.0",
     "mssql": "^10.0.1",
+    "react-chartjs-2": "^5.2.0",
+    "recharts": "^2.12.7",
     "validator": "^13.11.0"
   },
   "devDependencies": {
